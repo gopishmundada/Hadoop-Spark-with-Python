@@ -1,0 +1,22 @@
+from pyspark import SparkConf, SparkContext
+
+conf = SparkConf().setMaster("local").setAppName("FriendsByAge")
+sc = SparkContext(conf = conf)
+
+def parseLine(line):
+	#print(line)
+	fields = line.split(',')
+	age = int(fields[2])
+	numFriends = int(fields[3])
+	return (age, numFriends)
+
+lines = sc.textFile("fakefriends.csv")
+#print(lines)
+rdd = lines.map(parseLine)
+#totalsByAge = rdd.mapValues(lambda x: (x, 1))
+#temp = totalsByAge.reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1]))
+#averagesByAge = temp.mapValues(lambda x: x[0] / x[1])
+totalsByAge = rdd.mapValues(lambda x: (x, 1)).reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1])).mapValues(lambda x: x[0] / x[1])
+results = totalsByAge.collect()
+for result in results:
+    print(result)
